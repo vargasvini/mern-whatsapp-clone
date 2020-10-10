@@ -1,6 +1,7 @@
 import express from 'express';
 import mongoose from 'mongoose';
 import Messages from './dbMessages.js';
+import Pusher from 'pusher';
 
 const app = express();
 const port = process.env.PORT || 9000;
@@ -10,6 +11,14 @@ mongoose.connect(connection_url,{
     useCreateIndex: true,
     useNewUrlParser: true,
     useUnifiedTopology: true
+});
+
+const pusher = new Pusher({
+    appId: '1088141',
+    key: '4af0d494c585654912b2',
+    secret: '35a1bd016f3669bc0116',
+    cluster: 'us2',
+    encrypted: true
 });
 
 app.use(express.json())
