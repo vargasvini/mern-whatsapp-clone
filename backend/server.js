@@ -12,8 +12,19 @@ mongoose.connect(connection_url,{
     useUnifiedTopology: true
 });
 
+app.use(express.json())
+
 app.get('/', (req, res)=>{
     res.status(200).send('hello world')
+});
+
+app.get('/api/messages/sync', (req,res) =>{
+    Messages.find((err, data)=>{
+        if(err)
+            res.status(500).send(err)
+        else
+            res.status(200).send(data)
+    });
 });
 
 app.post('/api/messages/new', (req,res) =>{
