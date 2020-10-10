@@ -1,9 +1,16 @@
 import express from 'express';
 import mongoose from 'mongoose';
-import Messages from './dbMessages.js';
+import Messages from './collections/dbMessages.js';
 import Pusher from 'pusher';
 
 const app = express();
+app.use(express.json())
+app.use((req,res, next)=>{
+    res.setHeader("Access-Control-Allow-Origin", "*")
+    res.setHeader("Access-Control-Allow-Headers", "*")
+    next();
+});
+
 const port = process.env.PORT || 9000;
 const connection_url = "mongodb+srv://admin:7kf48wPpLvHIeDh7@cluster0.donhr.mongodb.net/whastappmerndb?retryWrites=true&w=majority";
 
@@ -21,7 +28,26 @@ const pusher = new Pusher({
     encrypted: true
 });
 
-app.use(express.json())
+const db = mongoose.connection;
+
+db.once('open', ()=>{
+    console.log('DB Connected')
+    const msgCollection = db.collection('messagecontents')
+    const changeStream = msgCollection.watch()
+
+    changeStream.on('change', (change)=>{
+        console.log("A change occurred")
+        if(change.operationType === "insert"){
+            const messageDetails = change.fullDocument
+            pusher.trigger("messages", "inserted", {
+                name: messageDetails.name,
+                message: messageDetails.message
+            });
+        }else{
+            console.log("Error triggering pusher")
+        }
+    });
+});
 
 app.get('/', (req, res)=>{
     res.status(200).send('hello world')
